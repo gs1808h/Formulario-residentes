@@ -1,593 +1,312 @@
 <!DOCTYPE html>
-<html lang="pt-BR" class="h-full bg-slate-50">
+<html lang="pt-PT">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Cadastro de Residentes</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                }
-            }
-        }
-    </script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registo de Residentes</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="font-sans antialiased text-slate-800 bg-slate-50 min-h-full flex flex-col justify-between p-4 sm:p-6 lg:p-8">
+<body class="bg-slate-100 min-h-screen font-sans text-slate-800 p-4 md:p-8">
+  <div class="max-w-5xl mx-auto space-y-6">
+    
+    <!-- Cabeçalho -->
+    <header class="bg-white rounded-xl shadow-sm p-6 border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+      <div>
+        <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-users text-blue-600"></i> Registo de Residentes
+        </h1>
+        <p class="text-slate-500 text-sm mt-1">Gestão de dados dos idosos e dos respetivos familiares responsáveis.</p>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="exportarCSV()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition flex items-center gap-1.5 border border-slate-300">
+          <i class="fa-solid fa-file-csv text-green-600"></i> Exportar CSV
+        </button>
+        <button onclick="exportarJSON()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium rounded-lg transition flex items-center gap-1.5 border border-slate-300">
+          <i class="fa-solid fa-file-code text-amber-600"></i> Exportar JSON
+        </button>
+      </div>
+    </header>
 
-    <div class="max-w-6xl mx-auto w-full space-y-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <!-- Formulário -->
+      <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200 h-fit lg:col-span-1">
+        <h2 id="formTitle" class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+          <i class="fa-solid fa-user-plus text-blue-600"></i> Adicionar Idoso(a)
+        </h2>
         
-        <!-- Header -->
-        <header class="text-center sm:text-left flex flex-col sm:flex-row justify-between items-center gap-4 bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-            <div>
-                <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 flex items-center gap-3">
-                    <span class="p-2.5 bg-indigo-600 text-white rounded-xl text-xl flex items-center justify-center w-10 h-10 shadow-md shadow-indigo-100">
-                        <i class="fa-solid font-bold fa-address-card"></i>
-                    </span>
-                    Cadastro de Residentes
-                </h1>
-                <p class="text-slate-500 text-sm mt-1">Gerencie as informações dos residentes e contatos dos responsáveis.</p>
-            </div>
-            <div class="flex items-center gap-2 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl border border-indigo-100 font-medium text-sm">
-                <i class="fa-solid fa-users"></i>
-                <span>Total de Registros: <strong id="totalCount" class="text-indigo-900 font-bold">0</strong></span>
-            </div>
-        </header>
+        <form id="residenteForm" onsubmit="salvarResidente(event)" class="space-y-4">
+          <input type="hidden" id="editIndex" value="-1">
+          
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1" for="nomeIdoso">
+              Idoso(a) <span class="text-red-500">*</span>
+            </label>
+            <input type="text" id="nomeIdoso" required placeholder="Nome completo do(a) idoso(a)" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm">
+          </div>
 
-        <main class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-            
-            <!-- Left Side: Registration Form -->
-            <section class="lg:col-span-5 bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-100">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
-                    <h2 id="formTitle" class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                        <i class="fa-solid fa-user-plus text-indigo-600"></i>
-                        Novo Cadastro
-                    </h2>
-                    <span id="editBadge" class="hidden text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded-full font-semibold">
-                        Modo Edição
-                    </span>
-                </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1" for="idade">
+              Idade <span class="text-red-500">*</span>
+            </label>
+            <input type="number" id="idade" min="0" max="130" required placeholder="Ex: 82" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm">
+          </div>
 
-                <form id="residentForm" class="space-y-5" class="novalidate">
-                    <input type="hidden" id="editIndex" value="-1">
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1" for="nomeFamiliar">
+              Nome do Familiar <span class="text-red-500">*</span>
+            </label>
+            <input type="text" id="nomeFamiliar" required placeholder="Nome do familiar responsável" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm">
+          </div>
 
-                    <!-- Nome do Residente -->
-                    <div>
-                        <label for="nome" class="block text-sm font-semibold text-slate-700 mb-1">
-                            Nome do Residente <span class="text-rose-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                                <i class="fa-solid fa-user"></i>
-                            </div>
-                            <input type="text" id="nome" name="nome" required
-                                class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm"
-                                placeholder="Digite o nome completo">
-                        </div>
-                        <p id="nomeError" class="hidden text-xs text-rose-500 mt-1 flex items-center gap-1">
-                            <i class="fa-solid fa-circle-exclamation"></i> Informe o nome completo (mínimo 3 caracteres).
-                        </p>
-                    </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1" for="telefone">
+              Telefone do Responsável <span class="text-red-500">*</span>
+            </label>
+            <input type="tel" id="telefone" required placeholder="(00) 90000-0000" oninput="mascaraTelefone(this)" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm">
+          </div>
 
-                    <!-- Idade -->
-                    <div>
-                        <label for="idade" class="block text-sm font-semibold text-slate-700 mb-1">
-                            Idade <span class="text-rose-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                                <i class="fa-solid fa-cake-candles"></i>
-                            </div>
-                            <input type="number" id="idade" name="idade" min="0" max="130" required
-                                class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm"
-                                placeholder="Ex: 18">
-                        </div>
-                        <p id="idadeError" class="hidden text-xs text-rose-500 mt-1 flex items-center gap-1">
-                            <i class="fa-solid fa-circle-exclamation"></i> Informe uma idade válida entre 0 e 130 anos.
-                        </p>
-                    </div>
+          <div>
+            <label class="block text-sm font-semibold text-slate-700 mb-1" for="cidade">
+              Cidade <span class="text-red-500">*</span>
+            </label>
+            <input type="text" id="cidade" required placeholder="Nome da cidade" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-sm">
+          </div>
 
-                    <!-- Telefone do Responsável -->
-                    <div>
-                        <label for="telefone" class="block text-sm font-semibold text-slate-700 mb-1">
-                            Telefone do Responsável <span class="text-rose-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                                <i class="fa-solid fa-phone"></i>
-                            </div>
-                            <input type="tel" id="telefone" name="telefone" maxlength="15" required
-                                class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm"
-                                placeholder="(00) 00000-0000">
-                        </div>
-                        <p id="telefoneError" class="hidden text-xs text-rose-500 mt-1 flex items-center gap-1">
-                            <i class="fa-solid fa-circle-exclamation"></i> Digite um número de telefone completo com DDD.
-                        </p>
-                    </div>
+          <div class="pt-2 flex gap-2">
+            <button type="submit" id="btnSalvar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2.5 px-4 rounded-lg transition shadow-sm flex items-center justify-center gap-2 text-sm">
+              <i class="fa-solid fa-floppy-disk"></i> Guardar
+            </button>
+            <button type="button" id="btnCancelar" onclick="limparFormulario()" class="hidden w-1/3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold py-2.5 px-3 rounded-lg transition text-sm">
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </section>
 
-                    <!-- Cidade -->
-                    <div>
-                        <label for="cidade" class="block text-sm font-semibold text-slate-700 mb-1">
-                            Cidade <span class="text-rose-500">*</span>
-                        </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                                <i class="fa-solid fa-city"></i>
-                            </div>
-                            <input type="text" id="cidade" name="cidade" required
-                                class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm"
-                                placeholder="Digite a cidade">
-                        </div>
-                        <p id="cidadeError" class="hidden text-xs text-rose-500 mt-1 flex items-center gap-1">
-                            <i class="fa-solid fa-circle-exclamation"></i> Por favor, informe a cidade.
-                        </p>
-                    </div>
-
-                    <!-- Botões de Ação -->
-                    <div class="pt-2 flex flex-col sm:flex-row gap-3">
-                        <button type="submit" id="submitBtn"
-                            class="flex-1 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-semibold py-2.5 px-4 rounded-xl shadow-md shadow-indigo-200 transition-all flex items-center justify-center gap-2 text-sm">
-                            <i class="fa-solid fa-floppy-disk"></i>
-                            <span id="submitBtnText">Salvar Residente</span>
-                        </button>
-                        
-                        <button type="button" id="cancelBtn" onclick="resetForm()"
-                            class="hidden bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 font-semibold py-2.5 px-4 rounded-xl transition-all items-center justify-center gap-2 text-sm">
-                            <i class="fa-solid fa-xmark"></i>
-                            Cancelar
-                        </button>
-                    </div>
-                </form>
-            </section>
-
-            <!-- Right Side: Registered List -->
-            <section class="lg:col-span-7 bg-white p-6 sm:p-8 rounded-2xl shadow-sm border border-slate-100 flex flex-col space-y-5">
-                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fa-solid fa-list-check text-indigo-600"></i>
-                            Residentes Cadastrados
-                        </h2>
-                    </div>
-
-                    <!-- Botões de Exportação -->
-                    <div class="flex items-center gap-2">
-                        <button onclick="exportToCSV()" title="Exportar em Excel/CSV"
-                            class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5">
-                            <i class="fa-solid fa-file-csv text-sm"></i> CSV
-                        </button>
-                        <button onclick="exportToJSON()" title="Exportar em JSON"
-                            class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5">
-                            <i class="fa-solid fa-file-code text-sm"></i> JSON
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Barra de Pesquisa -->
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                    </div>
-                    <input type="text" id="searchInput" oninput="renderTable()"
-                        class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition-all text-sm"
-                        placeholder="Buscar por nome ou cidade...">
-                </div>
-
-                <!-- Tabela de Residentes -->
-                <div class="overflow-x-auto rounded-xl border border-slate-200 flex-1">
-                    <table class="w-full text-left text-sm text-slate-600">
-                        <thead class="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
-                            <tr>
-                                <th scope="col" class="px-4 py-3">Residente</th>
-                                <th scope="col" class="px-4 py-3">Idade</th>
-                                <th scope="col" class="px-4 py-3">Resp. (Telefone)</th>
-                                <th scope="col" class="px-4 py-3">Cidade</th>
-                                <th scope="col" class="px-4 py-3 text-center">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody id="residentsTableBody" class="divide-y divide-slate-100 bg-white">
-                            <!-- Populado via JS -->
-                        </tbody>
-                    </table>
-
-                    <!-- Estado Vazio -->
-                    <div id="emptyState" class="hidden text-center py-12 px-4">
-                        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 text-slate-400 mb-3">
-                            <i class="fa-solid fa-folder-open text-xl"></i>
-                        </div>
-                        <p class="text-slate-600 font-medium">Nenhum residente cadastrado.</p>
-                        <p class="text-slate-400 text-xs mt-1">Preencha o formulário para adicionar o primeiro registro.</p>
-                    </div>
-                </div>
-            </section>
-        </main>
-    </div>
-
-    <!-- Custom Notification Toast -->
-    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none z-50 flex items-center gap-3 bg-slate-900 text-white px-5 py-3.5 rounded-xl shadow-xl border border-slate-700 max-w-md">
-        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
-        <span id="toastMessage" class="text-sm font-medium">Operação realizada com sucesso!</span>
-    </div>
-
-    <!-- Modal de Confirmação para Exclusão (Substituindo o confirm/alert) -->
-    <div id="deleteModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4 border border-slate-100 animate-in fade-in zoom-in duration-200">
-            <div class="flex items-center gap-3 text-rose-600">
-                <div class="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center flex-shrink-0">
-                    <i class="fa-solid fa-triangle-exclamation text-lg"></i>
-                </div>
-                <h3 class="text-base font-bold text-slate-900">Excluir Residente</h3>
-            </div>
-            <p class="text-sm text-slate-600">Tem certeza que deseja remover este registro? Esta ação não poderá ser desfeita.</p>
-            <div class="flex items-center justify-end gap-3 pt-2">
-                <button onclick="closeDeleteModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition-all">
-                    Cancelar
-                </button>
-                <button id="confirmDeleteBtn" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs rounded-xl shadow-md shadow-rose-200 transition-all">
-                    Confirmar Exclusão
-                </button>
-            </div>
+      <!-- Tabela / Lista -->
+      <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200 lg:col-span-2 space-y-4">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+          <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-list-check text-blue-600"></i> Residentes Registados
+            <span id="totalBadge" class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">0</span>
+          </h2>
+          <div class="relative w-full sm:w-64">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="text" id="inputBusca" oninput="filtrarResidentes()" placeholder="Pesquisar por nome ou cidade..." class="w-full pl-9 pr-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+          </div>
         </div>
+
+        <div class="overflow-x-auto border border-slate-200 rounded-lg">
+          <table class="w-full text-sm text-left text-slate-600">
+            <thead class="text-xs text-slate-700 uppercase bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th class="px-4 py-3">Idoso(a)</th>
+                <th class="px-3 py-3">Idade</th>
+                <th class="px-4 py-3">Familiar</th>
+                <th class="px-4 py-3">Contacto</th>
+                <th class="px-4 py-3">Cidade</th>
+                <th class="px-4 py-3 text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tabelaBody">
+              <!-- Preenchido via JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div id="emptyState" class="text-center py-8 text-slate-400">
+          <i class="fa-regular fa-folder-open text-4xl mb-2 block"></i>
+          <p>Nenhum residente registado ainda.</p>
+        </div>
+      </section>
     </div>
+  </div>
 
-    <script>
-        // --- ESTADO DA APLICAÇÃO ---
-        let residents = [];
-        let itemToDeleteIndex = null;
+  <!-- Toast de Notificação -->
+  <div id="toast" class="fixed bottom-5 right-5 bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 transition-opacity duration-300 opacity-0 pointer-events-none z-50 text-sm">
+    <i id="toastIcon" class="fa-solid fa-circle-check text-green-400"></i>
+    <span id="toastMsg">Operação realizada com sucesso!</span>
+  </div>
 
-        // Elementos do DOM
-        const form = document.getElementById('residentForm');
-        const nomeInput = document.getElementById('nome');
-        const idadeInput = document.getElementById('idade');
-        const telefoneInput = document.getElementById('telefone');
-        const cidadeInput = document.getElementById('cidade');
-        const editIndexInput = document.getElementById('editIndex');
+  <script>
+    let residentes = JSON.parse(localStorage.getItem('residentes_db')) || [];
 
-        const formTitle = document.getElementById('formTitle');
-        const editBadge = document.getElementById('editBadge');
-        const submitBtnText = document.getElementById('submitBtnText');
-        const cancelBtn = document.getElementById('cancelBtn');
+    function mascaraTelefone(input) {
+      let v = input.value.replace(/\D/g, '');
+      v = v.replace(/^(\d{2})(\d)/g, '($1) $2');
+      v = v.replace(/(\d)(\d{4})$/, '$1-$2');
+      input.value = v;
+    }
 
-        const tableBody = document.getElementById('residentsTableBody');
-        const emptyState = document.getElementById('emptyState');
-        const searchInput = document.getElementById('searchInput');
-        const totalCount = document.getElementById('totalCount');
+    function renderizarTabela(lista = residentes) {
+      const tbody = document.getElementById('tabelaBody');
+      const emptyState = document.getElementById('emptyState');
+      const totalBadge = document.getElementById('totalBadge');
+      
+      tbody.innerHTML = '';
+      totalBadge.innerText = lista.length;
 
-        // --- INICIALIZAÇÃO ---
-        window.addEventListener('DOMContentLoaded', () => {
-            loadFromLocalStorage();
-            renderTable();
-            setupValidationListeners();
-        });
+      if (lista.length === 0) {
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      emptyState.classList.add('hidden');
 
-        // Carregar dados salvos
-        function loadFromLocalStorage() {
-            const stored = localStorage.getItem('residents_data');
-            if (stored) {
-                try {
-                    residents = JSON.parse(stored);
-                } catch (e) {
-                    residents = [];
-                }
-            }
-        }
+      lista.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-slate-100 hover:bg-slate-50 transition';
+        tr.innerHTML = `
+          <td class="px-4 py-3 font-semibold text-slate-800">${item.nomeIdoso}</td>
+          <td class="px-3 py-3">${item.idade} anos</td>
+          <td class="px-4 py-3">${item.nomeFamiliar}</td>
+          <td class="px-4 py-3 font-mono text-xs">${item.telefone}</td>
+          <td class="px-4 py-3">${item.cidade}</td>
+          <td class="px-4 py-3 text-center space-x-1">
+            <button onclick="copiarTextoIndividual(${index})" title="Copiar Ficha em Texto" class="p-1.5 text-slate-600 hover:text-blue-600 rounded hover:bg-slate-100 transition">
+              <i class="fa-regular fa-copy"></i>
+            </button>
+            <button onclick="partilharWhatsApp(${index})" title="Enviar pelo WhatsApp" class="p-1.5 text-slate-600 hover:text-green-600 rounded hover:bg-slate-100 transition">
+              <i class="fa-brands fa-whatsapp"></i>
+            </button>
+            <button onclick="editarResidente(${index})" title="Editar" class="p-1.5 text-slate-600 hover:text-amber-600 rounded hover:bg-slate-100 transition">
+              <i class="fa-regular fa-pen-to-square"></i>
+            </button>
+            <button onclick="excluirResidente(${index})" title="Eliminar" class="p-1.5 text-slate-600 hover:text-red-600 rounded hover:bg-slate-100 transition">
+              <i class="fa-regular fa-trash-can"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
 
-        // Salvar dados no LocalStorage
-        function saveToLocalStorage() {
-            localStorage.setItem('residents_data', JSON.stringify(residents));
-        }
+    function salvarResidente(e) {
+      e.preventDefault();
+      const editIndex = parseInt(document.getElementById('editIndex').value);
+      
+      const novoResidente = {
+        nomeIdoso: document.getElementById('nomeIdoso').value.trim(),
+        idade: document.getElementById('idade').value,
+        nomeFamiliar: document.getElementById('nomeFamiliar').value.trim(),
+        telefone: document.getElementById('telefone').value.trim(),
+        cidade: document.getElementById('cidade').value.trim()
+      };
 
-        // --- MÁSCARA AUTOMÁTICA DE TELEFONE ---
-        telefoneInput.addEventListener('input', (e) => {
-            let value = e.target.value.replace(/\D/g, ''); // Remove não dígitos
-            if (value.length > 11) value = value.slice(0, 11);
+      if (editIndex >= 0) {
+        residentes[editIndex] = novoResidente;
+        mostrarToast('Registo atualizado com sucesso!');
+      } else {
+        residentes.push(novoResidente);
+        mostrarToast('Residente adicionado com sucesso!');
+      }
 
-            if (value.length > 10) {
-                // Celular com 9 dígitos: (XX) XXXXX-XXXX
-                value = value.replace(/^(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-            } else if (value.length > 6) {
-                // Telefone fixo/incompleto: (XX) XXXX-XXXX
-                value = value.replace(/^(\d{2})(\d{4})(\d{0,4})/, '($1) $2-$3');
-            } else if (value.length > 2) {
-                value = value.replace(/^(\d{2})(\d{0,5})/, '($1) $2');
-            } else if (value.length > 0) {
-                value = value.replace(/^(\d*)/, '($1');
-            }
+      guardarDados();
+      limparFormulario();
+      renderizarTabela();
+    }
 
-            e.target.value = value;
-            validateField('telefone');
-        });
+    function editarResidente(index) {
+      const item = residentes[index];
+      document.getElementById('editIndex').value = index;
+      document.getElementById('nomeIdoso').value = item.nomeIdoso;
+      document.getElementById('idade').value = item.idade;
+      document.getElementById('nomeFamiliar').value = item.nomeFamiliar;
+      document.getElementById('telefone').value = item.telefone;
+      document.getElementById('cidade').value = item.cidade;
 
-        // --- VALIDAÇÕES DE FORMULÁRIO ---
-        function validateField(field) {
-            let isValid = true;
+      document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-600"></i> Editar Registado`;
+      document.getElementById('btnSalvar').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Atualizar`;
+      document.getElementById('btnCancelar').classList.remove('hidden');
+    }
 
-            if (field === 'nome') {
-                const val = nomeInput.value.trim();
-                isValid = val.length >= 3;
-                toggleError('nomeError', !isValid);
-            }
+    function excluirResidente(index) {
+      if (confirm(`Tem a certeza de que deseja eliminar o registo de ${residentes[index].nomeIdoso}?`)) {
+        residentes.splice(index, 1);
+        guardarDados();
+        renderizarTabela();
+        mostrarToast('Registo eliminado com sucesso!');
+      }
+    }
 
-            if (field === 'idade') {
-                const val = parseInt(idadeInput.value, 10);
-                isValid = !isNaN(val) && val >= 0 && val <= 130;
-                toggleError('idadeError', !isValid);
-            }
+    function limparFormulario() {
+      document.getElementById('residenteForm').reset();
+      document.getElementById('editIndex').value = -1;
+      document.getElementById('formTitle').innerHTML = `<i class="fa-solid fa-user-plus text-blue-600"></i> Adicionar Idoso(a)`;
+      document.getElementById('btnSalvar').innerHTML = `<i class="fa-solid fa-floppy-disk"></i> Guardar`;
+      document.getElementById('btnCancelar').classList.add('hidden');
+    }
 
-            if (field === 'telefone') {
-                const digits = telefoneInput.value.replace(/\D/g, '');
-                isValid = digits.length >= 10 && digits.length <= 11;
-                toggleError('telefoneError', !isValid);
-            }
+    function formatarTextoResidente(item) {
+      return `📋 *Ficha do Residente*\n` +
+             `• *Idoso(a):* ${item.nomeIdoso}\n` +
+             `• *Idade:* ${item.idade} anos\n` +
+             `• *Nome do Familiar:* ${item.nomeFamiliar}\n` +
+             `• *Telefone do Responsável:* ${item.telefone}\n` +
+             `• *Cidade:* ${item.cidade}`;
+    }
 
-            if (field === 'cidade') {
-                const val = cidadeInput.value.trim();
-                isValid = val.length >= 2;
-                toggleError('cidadeError', !isValid);
-            }
+    function copiarTextoIndividual(index) {
+      const item = residentes[index];
+      const texto = formatarTextoResidente(item);
+      navigator.clipboard.writeText(texto).then(() => {
+        mostrarToast('Texto do residente copiado!');
+      });
+    }
 
-            return isValid;
-        }
+    function partilharWhatsApp(index) {
+      const item = residentes[index];
+      const texto = encodeURIComponent(formatarTextoResidente(item));
+      window.open(`https://api.whatsapp.com/send?text=${texto}`, '_blank');
+    }
 
-        function toggleError(elementId, show) {
-            const errorEl = document.getElementById(elementId);
-            if (show) {
-                errorEl.classList.remove('hidden');
-            } else {
-                errorEl.classList.add('hidden');
-            }
-        }
+    function filtrarResidentes() {
+      const termo = document.getElementById('inputBusca').value.toLowerCase();
+      const filtrados = residentes.filter(item => 
+        item.nomeIdoso.toLowerCase().includes(termo) ||
+        item.nomeFamiliar.toLowerCase().includes(termo) ||
+        item.cidade.toLowerCase().includes(termo)
+      );
+      renderizarTabela(filtrados);
+    }
 
-        function setupValidationListeners() {
-            nomeInput.addEventListener('input', () => validateField('nome'));
-            idadeInput.addEventListener('input', () => validateField('idade'));
-            cidadeInput.addEventListener('input', () => validateField('cidade'));
-        }
+    function guardarDados() {
+      localStorage.setItem('residentes_db', JSON.stringify(residentes));
+    }
 
-        function validateAll() {
-            const v1 = validateField('nome');
-            const v2 = validateField('idade');
-            const v3 = validateField('telefone');
-            const v4 = validateField('cidade');
-            return v1 && v2 && v3 && v4;
-        }
+    function mostrarToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastMsg').innerText = msg;
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 3000);
+    }
 
-        // --- SUBMIT DO FORMULÁRIO ---
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
+    function exportarCSV() {
+      if (residentes.length === 0) return alert('Sem dados para exportar!');
+      let csv = 'Idoso(a);Idade;Nome do Familiar;Telefone do Responsavel;Cidade\n';
+      residentes.forEach(r => {
+        csv += `"${r.nomeIdoso}";"${r.idade}";"${r.nomeFamiliar}";"${r.telefone}";"${r.cidade}"\n`;
+      });
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'residentes.csv';
+      link.click();
+    }
 
-            if (!validateAll()) {
-                showToast('Por favor, corrija os erros no formulário.', 'error');
-                return;
-            }
+    function exportarJSON() {
+      if (residentes.length === 0) return alert('Sem dados para exportar!');
+      const blob = new Blob([JSON.stringify(residentes, null, 2)], { type: 'application/json' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'residentes.json';
+      link.click();
+    }
 
-            const residentData = {
-                id: Date.now(),
-                nome: nomeInput.value.trim(),
-                idade: parseInt(idadeInput.value, 10),
-                telefone: telefoneInput.value.trim(),
-                cidade: cidadeInput.value.trim()
-            };
-
-            const index = parseInt(editIndexInput.value, 10);
-
-            if (index >= 0) {
-                // Atualizar existente
-                residents[index] = { ...residents[index], ...residentData };
-                showToast('Residente atualizado com sucesso!', 'success');
-            } else {
-                // Novo cadastro
-                residents.unshift(residentData);
-                showToast('Residente cadastrado com sucesso!', 'success');
-            }
-
-            saveToLocalStorage();
-            renderTable();
-            resetForm();
-        });
-
-        // --- RENDERIZAR TABELA ---
-        function renderTable() {
-            const query = searchInput.value.toLowerCase().trim();
-            tableBody.innerHTML = '';
-
-            const filtered = residents.filter(r => 
-                r.nome.toLowerCase().includes(query) || 
-                r.cidade.toLowerCase().includes(query)
-            );
-
-            totalCount.textContent = residents.length;
-
-            if (filtered.length === 0) {
-                emptyState.classList.remove('hidden');
-                return;
-            } else {
-                emptyState.classList.add('hidden');
-            }
-
-            filtered.forEach((resident, idx) => {
-                const originalIndex = residents.findIndex(r => r.id === resident.id);
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50/80 transition-colors duration-150';
-
-                tr.innerHTML = `
-                    <td class="px-4 py-3.5 font-medium text-slate-900">
-                        ${escapeHtml(resident.nome)}
-                    </td>
-                    <td class="px-4 py-3.5 text-slate-600">
-                        ${resident.idade} ano(s)
-                    </td>
-                    <td class="px-4 py-3.5 text-slate-600 font-mono text-xs">
-                        ${escapeHtml(resident.telefone)}
-                    </td>
-                    <td class="px-4 py-3.5 text-slate-600">
-                        ${escapeHtml(resident.cidade)}
-                    </td>
-                    <td class="px-4 py-3.5 text-center">
-                        <div class="flex items-center justify-center gap-1.5">
-                            <button onclick="editResident(${originalIndex})" title="Editar" 
-                                class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors">
-                                <i class="fa-solid fa-pen-to-square"></i>
-                            </button>
-                            <button onclick="openDeleteModal(${originalIndex})" title="Excluir" 
-                                class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
-                        </div>
-                    </td>
-                `;
-
-                tableBody.appendChild(tr);
-            });
-        }
-
-        // --- EDITAR REGISTRO ---
-        function editResident(index) {
-            const resident = residents[index];
-            if (!resident) return;
-
-            nomeInput.value = resident.nome;
-            idadeInput.value = resident.idade;
-            telefoneInput.value = resident.telefone;
-            cidadeInput.value = resident.cidade;
-            editIndexInput.value = index;
-
-            // Alterar UI do Formulário
-            formTitle.innerHTML = `<i class="fa-solid fa-pen-to-square text-amber-600"></i> Editar Residente`;
-            editBadge.classList.remove('hidden');
-            submitBtnText.textContent = 'Atualizar Cadastro';
-            cancelBtn.classList.remove('hidden');
-            cancelBtn.classList.add('flex');
-
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        // Resetar Formulário
-        function resetForm() {
-            form.reset();
-            editIndexInput.value = '-1';
-
-            // Resetar erros visuais
-            ['nomeError', 'idadeError', 'telefoneError', 'cidadeError'].forEach(id => toggleError(id, false));
-
-            // Alterar UI do Formulário
-            formTitle.innerHTML = `<i class="fa-solid fa-user-plus text-indigo-600"></i> Novo Cadastro`;
-            editBadge.classList.add('hidden');
-            submitBtnText.textContent = 'Salvar Residente';
-            cancelBtn.classList.add('hidden');
-            cancelBtn.classList.remove('flex');
-        }
-
-        // --- EXCLUIR REGISTRO ---
-        function openDeleteModal(index) {
-            itemToDeleteIndex = index;
-            document.getElementById('deleteModal').classList.remove('hidden');
-        }
-
-        function closeDeleteModal() {
-            itemToDeleteIndex = null;
-            document.getElementById('deleteModal').classList.add('hidden');
-        }
-
-        document.getElementById('confirmDeleteBtn').addEventListener('click', () => {
-            if (itemToDeleteIndex !== null && itemToDeleteIndex >= 0) {
-                residents.splice(itemToDeleteIndex, 1);
-                saveToLocalStorage();
-                renderTable();
-                showToast('Residente removido com sucesso!', 'info');
-                closeDeleteModal();
-
-                if (parseInt(editIndexInput.value, 10) === itemToDeleteIndex) {
-                    resetForm();
-                }
-            }
-        });
-
-        // --- EXPORTAR DADOS ---
-        function exportToCSV() {
-            if (residents.length === 0) {
-                showToast('Não há registros para exportar.', 'error');
-                return;
-            }
-
-            let csvContent = "\uFEFF"; // BOM para suporte a acentuação no Excel
-            csvContent += "Nome;Idade;Telefone do Responsavel;Cidade\n";
-
-            residents.forEach(r => {
-                csvContent += `"${r.nome}";"${r.idade}";"${r.telefone}";"${r.cidade}"\n`;
-            });
-
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            downloadFile(blob, 'residentes_cadastrados.csv');
-            showToast('Exportando para CSV...', 'success');
-        }
-
-        function exportToJSON() {
-            if (residents.length === 0) {
-                showToast('Não há registros para exportar.', 'error');
-                return;
-            }
-
-            const jsonString = JSON.stringify(residents, null, 2);
-            const blob = new Blob([jsonString], { type: 'application/json' });
-            downloadFile(blob, 'residentes_cadastrados.json');
-            showToast('Exportando para JSON...', 'success');
-        }
-
-        function downloadFile(blob, fileName) {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-        }
-
-        // --- SISTEMA DE TOAST (Substitui alert) ---
-        function showToast(message, type = 'success') {
-            const toast = document.getElementById('toast');
-            const toastMessage = document.getElementById('toastMessage');
-            const toastIcon = document.getElementById('toastIcon');
-
-            toastMessage.textContent = message;
-
-            if (type === 'error') {
-                toastIcon.className = 'fa-solid fa-circle-xmark text-rose-400 text-lg';
-            } else if (type === 'info') {
-                toastIcon.className = 'fa-solid fa-circle-info text-amber-400 text-lg';
-            } else {
-                toastIcon.className = 'fa-solid fa-circle-check text-emerald-400 text-lg';
-            }
-
-            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
-            
-            setTimeout(() => {
-                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
-            }, 3000);
-        }
-
-        // Função de escape contra XSS
-        function escapeHtml(str) {
-            return str
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
-        }
-    </script>
+    // Inicialização
+    renderizarTabela();
+  </script>
 </body>
 </html>
